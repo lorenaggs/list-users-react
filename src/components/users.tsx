@@ -186,10 +186,18 @@ export const Users = () => {
             : 'bg-red-100 text-red-800 border-red-300';
     };
 
+
+    const handleLogout = () => {
+        localStorage.clear();
+        setUser([]);
+    }
+
     return (
         <div className="min-h-screen pb-12">
             <Loading loading={loading} />
-            <Header />
+            <Header
+            logout={() => handleLogout()}
+            />
 
             <div className="container mx-auto px-8 sm:px-10 lg:px-12 py-8 sm:py-10 lg:py-12 max-w-8xl">
                 <div className="bg-white rounded-2xl shadow-xl p-8 lg:p-10 mb-10 fade-in">

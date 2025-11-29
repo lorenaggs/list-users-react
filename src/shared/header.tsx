@@ -1,8 +1,13 @@
-export const Header = () => {
-    const logout = () => {
+interface HeaderProps {
+    logout: () => void;
+}
+
+
+export const Header = ( {logout}: HeaderProps) => {
+    /*const logout = () => {
         localStorage.clear();
         window.location.reload();
-    }
+    }*/
 
     return (
         <header className="w-full h-24 bg-gradient-to-r from-green-600 to-green-500 shadow-xl p-6 lg:p-12">
