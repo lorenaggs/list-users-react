@@ -2,88 +2,169 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import type { UserFormModel } from "../models/userForm";
 import * as Yup from 'yup';
 import type { ItemForm } from "../models/itemForm.ts";
+import type { UserModel } from "../models/usersModels";
 
 interface FormProps {
     initialValues: UserFormModel;
     fields: ItemForm[];
     onSubmit: (values: UserFormModel) => void;
     onCancel: () => void;
+    existingUsers?: UserModel[];
+    isEditMode?: boolean;
+    currentUserEmail?: string;
 }
 
-const validationSchema = Yup.object({
-    name: Yup.string()
-        .required('El nombre es requerido')
-        .min(2, 'El nombre debe tener al menos 2 caracteres'),
-    email: Yup.string()
-        .required('El email es requerido')
-        .email('El email no es válido'),
-    gender: Yup.string().required('El género es requerido'),
-    status: Yup.string().required('El estatus es requerido'),
-});
+const createValidationSchema = (existingUsers: UserModel[] = [], isEditMode: boolean = false, currentUserEmail: string = '') => {
+    return Yup.object({
+        name: Yup.string()
+            .required('El nombre es requerido')
+            .min(2, 'El nombre debe tener al menos 2 caracteres')
+            .max(50, 'El nombre no puede tener más de 50 caracteres')
+            .matches(
+                /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/,
+                'El nombre solo puede contener letras y espacios'
+            )
+            .trim()
+            .test('no-only-spaces', 'El nombre no puede contener solo espacios', (value) => {
+                return value ? value.trim().length > 0 : false;
+            }),
+        email: Yup.string()
+            .required('El email es requerido')
+            .email('El email no es válido')
+            .max(100, 'El email no puede tener más de 100 caracteres')
+            .matches(
+                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                'El formato del email no es válido'
+            )
+            .test('unique-email', 'Este email ya está registrado', (value) => {
+                if (!value) return true;
+                if (isEditMode && value.toLowerCase() === currentUserEmail.toLowerCase()) {
+                    return true; // Permite el mismo email al editar
+                }
+                return !existingUsers.some(
+                    user => user.email.toLowerCase() === value.toLowerCase()
+                );
+            })
+            .trim()
+            .lowercase(),
+        gender: Yup.string()
+            .required('El género es requerido')
+            .oneOf(['hombre', 'mujer'], 'Debe seleccionar un género válido'),
+        status: Yup.string()
+            .required('El estatus es requerido')
+            .oneOf(['activo', 'inactivo'], 'Debe seleccionar un estatus válido'),
+    });
+};
 
-export const CustomForm = ({ initialValues, fields, onSubmit, onCancel }: FormProps) => {
-    const isEditMode = Boolean(initialValues.name);
+export const CustomForm = ({ 
+    initialValues, 
+    fields, 
+    onSubmit, 
+    onCancel,
+    existingUsers = [],
+    isEditMode: propIsEditMode = false,
+    currentUserEmail = ''
+}: FormProps) => {
+    const isEditMode = propIsEditMode || Boolean(initialValues.name);
+    const validationSchema = createValidationSchema(existingUsers, isEditMode, currentUserEmail);
 
     return (
         <Formik
             initialValues={initialValues}
             onSubmit={onSubmit}
             validationSchema={validationSchema}
+            validateOnChange={true}
+            validateOnBlur={true}
+            enableReinitialize={true}
         >
-            {({ isValid, dirty, isSubmitting }) => (
+            {({ isValid, dirty, isSubmitting, errors, values, touched, setFieldTouched }) => (
                 <Form className="flex flex-col gap-8">
                     <h2 className="text-2xl lg:text-3xl font-bold text-center text-gray-800 mb-4 uppercase">
                         {isEditMode ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
                     </h2>
 
                     <div className="flex flex-col gap-7">
-                        {fields.map((field) => (
-                            <div key={field.name} className="flex flex-col gap-2">
-                                <label 
-                                    htmlFor={field.name}
-                                    className="text-base font-semibold text-gray-700 uppercase tracking-wide"
-                                >
-                                    {field.label}
-                                </label>
-
-                                {field.typeInput === "text" && (
-                                    <Field
-                                        id={field.name}
-                                        name={field.name}
-                                        type="text"
-                                        placeholder={field.placeholder}
-                                        className="border-2 border-gray-300 rounded-xl px-5 py-4 text-base w-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                                    />
-                                )}
-
-                                {field.typeInput === "select" && (
-                                    <Field
-                                        as="select"
-                                        id={field.name}
-                                        name={field.name}
-                                        className="border-2 border-gray-300 rounded-xl px-5 py-4 text-base w-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white"
+                        {fields.map((field) => {
+                            const fieldName = field.name as keyof typeof errors;
+                            const fieldError = errors[fieldName];
+                            const fieldValue = values[fieldName];
+                            const isTouched = touched[fieldName];
+                            
+                            // Mostrar error mientras escribe: si hay error y el campo tiene valor (no esperar a que sea tocado)
+                            // Para campos select, mostrar error solo si ha sido tocado
+                            const hasValue = fieldValue !== '' && fieldValue !== null && fieldValue !== undefined;
+                            const showError = fieldError && (
+                                field.typeInput === 'select' 
+                                    ? isTouched || hasValue
+                                    : hasValue || isTouched
+                            );
+                            
+                            return (
+                                <div key={field.name} className="flex flex-col gap-2">
+                                    <label 
+                                        htmlFor={field.name}
+                                        className={`text-base font-semibold uppercase tracking-wide ${
+                                            showError ? 'text-red-600' : 'text-gray-700'
+                                        }`}
                                     >
-                                        <option value="">{field.placeholder}</option>
-                                        {(field.genders ?? []).map((option) => (
-                                            <option key={option} value={option}>
-                                                {option.charAt(0).toUpperCase() + option.slice(1)}
-                                            </option>
-                                        ))}
-                                        {(field.status ?? []).map((option) => (
-                                            <option key={option} value={option}>
-                                                {option.charAt(0).toUpperCase() + option.slice(1)}
-                                            </option>
-                                        ))}
-                                    </Field>
-                                )}
+                                        {field.label}
+                                        <span className="text-red-500 ml-1">*</span>
+                                    </label>
 
-                                <ErrorMessage 
-                                    name={field.name} 
-                                    component="div"
-                                    className="text-red-500 text-sm mt-2"
-                                />
-                            </div>
-                        ))}
+                                    {field.typeInput === "text" && (
+                                        <Field
+                                            id={field.name}
+                                            name={field.name}
+                                            type={field.name === 'email' ? 'email' : 'text'}
+                                            placeholder={field.placeholder}
+                                            onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                                                setFieldTouched(field.name, true);
+                                            }}
+                                            className={`border-2 rounded-xl px-5 py-4 text-base w-full focus:outline-none focus:ring-2 transition-all ${
+                                                showError
+                                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                                    : 'border-gray-300 focus:ring-green-500 focus:border-transparent'
+                                            }`}
+                                        />
+                                    )}
+
+                                    {field.typeInput === "select" && (
+                                        <Field
+                                            as="select"
+                                            id={field.name}
+                                            name={field.name}
+                                            onBlur={(e: React.FocusEvent<HTMLSelectElement>) => {
+                                                setFieldTouched(field.name, true);
+                                            }}
+                                            className={`border-2 rounded-xl px-5 py-4 text-base w-full focus:outline-none focus:ring-2 transition-all bg-white ${
+                                                showError
+                                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                                    : 'border-gray-300 focus:ring-green-500 focus:border-transparent'
+                                            }`}
+                                        >
+                                            <option value="">{field.placeholder}</option>
+                                            {(field.genders ?? []).map((option) => (
+                                                <option key={option} value={option}>
+                                                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                                                </option>
+                                            ))}
+                                            {(field.status ?? []).map((option) => (
+                                                <option key={option} value={option}>
+                                                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                                                </option>
+                                            ))}
+                                        </Field>
+                                    )}
+
+                                    {showError && (
+                                        <div className="text-red-500 text-sm mt-1 flex items-center gap-1 animate-fadeIn">
+                                            <span className="text-red-500">⚠</span>
+                                            <span>{fieldError}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-5 mt-8">

@@ -53,28 +53,37 @@ export const Users = () => {
         const fetchUsers = async () => {
             setLoading(true);
             try {
-                const usersFromStorage = localStorage.getItem('users');
+                // Siempre consultar el servicio primero
+                const usersResponse = await getUser();
 
+                const users = usersResponse.map((user: UserModel) => ({
+                    ...user,
+                    gender: user.gender === 'male' ? 'hombre' : 'mujer',
+                    status: user.status === 'active' ? 'activo' : 'inactivo'
+                }));
+
+                setUser(users);
+                localStorage.setItem('users', JSON.stringify(users));
+            } catch (error) {
+                // Si falla el servicio, intentar cargar desde localStorage como respaldo
+                const usersFromStorage = localStorage.getItem('users');
+                
                 if (usersFromStorage) {
                     setUser(JSON.parse(usersFromStorage));
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Modo sin conexión',
+                        text: 'No se pudo conectar al servicio. Se están mostrando los datos guardados localmente.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
                 } else {
-                    const usersResponse = await getUser();
-
-                    const users = usersResponse.map((user: UserModel) => ({
-                        ...user,
-                        gender: user.gender === 'male' ? 'hombre' : 'mujer',
-                        status: user.status === 'active' ? 'activo' : 'inactivo'
-                    }));
-
-                    setUser(users);
-                    localStorage.setItem('users', JSON.stringify(users));
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudieron cargar los usuarios. Por favor, verifica tu conexión e intenta de nuevo.',
+                    });
                 }
-            } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudieron cargar los usuarios. Por favor, intenta de nuevo.',
-                });
             } finally {
                 setLoading(false);
             }
@@ -156,6 +165,10 @@ export const Users = () => {
                 status: userToEdit.status
             });
         }
+    };
+
+    const getCurrentUserEmail = () => {
+        return editUser?.email || '';
     };
 
     // Abrir formulario limpio al crear
@@ -441,6 +454,9 @@ export const Users = () => {
                                     setShowForm(false);
                                     setEditUser(null);
                                 }}
+                                existingUsers={user}
+                                isEditMode={Boolean(editUser)}
+                                currentUserEmail={getCurrentUserEmail()}
                             />
                         </div>
                     </div>
