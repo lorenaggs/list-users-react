@@ -7,7 +7,7 @@ import { Header } from "../shared/header.tsx";
 import type { ItemForm } from "../models/itemForm.ts";
 import { Loading } from "../shared/loading.tsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPenToSquare, faTrashCan, faPlus, faUser } from "@fortawesome/free-solid-svg-icons";
+import { faPenToSquare, faTrashCan, faPlus, faUser, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { OptionsGender } from "../models/optionsGender.ts";
 import { OptionsStatus } from "../models/optionsStatus.ts";
 import Swal from 'sweetalert2';
@@ -44,6 +44,7 @@ export const Users = () => {
     const [showForm, setShowForm] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
     const [editUser, setEditUser] = useState<UserFormModel | null>(null);
+    const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
 
     // Estado REAL que usa el formulario
     const [formValues, setFormValues] = useState<UserFormModel>(initialValues);
@@ -104,6 +105,7 @@ export const Users = () => {
         setUser(listUser);
         setShowForm(false);
         setEditUser(null);
+        setSelectedUsers(new Set());
         
         Swal.fire({
             icon: 'success',
@@ -129,6 +131,9 @@ export const Users = () => {
                 const listUser = user.filter((u: UserModel) => u.id !== id);
                 localStorage.setItem('users', JSON.stringify(listUser));
                 setUser(listUser);
+                const newSelected = new Set(selectedUsers);
+                newSelected.delete(id);
+                setSelectedUsers(newSelected);
                 Swal.fire({
                     icon: 'success',
                     title: '¡Eliminado!',
@@ -138,7 +143,7 @@ export const Users = () => {
                 });
             }
         });
-    }, [user]);
+    }, [user, selectedUsers]);
 
     const editUserItem = (id: number) => {
         const userToEdit = user.find(user => user.id === id);
@@ -169,6 +174,7 @@ export const Users = () => {
         setUser(updatedList);
         setShowForm(false);
         setEditUser(null);
+        setSelectedUsers(new Set());
         
         Swal.fire({
             icon: 'success',
@@ -185,6 +191,64 @@ export const Users = () => {
             ? 'bg-green-100 text-green-800 border-green-300'
             : 'bg-red-100 text-red-800 border-red-300';
     };
+
+    // Manejo de selección
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedUsers(new Set(user.map(u => u.id)));
+        } else {
+            setSelectedUsers(new Set());
+        }
+    };
+
+    const handleSelectUser = (userId: number, checked: boolean) => {
+        const newSelected = new Set(selectedUsers);
+        if (checked) {
+            newSelected.add(userId);
+        } else {
+            newSelected.delete(userId);
+        }
+        setSelectedUsers(newSelected);
+    };
+
+    const isAllSelected = user.length > 0 && selectedUsers.size === user.length;
+    const isIndeterminate = selectedUsers.size > 0 && selectedUsers.size < user.length;
+
+    // Eliminar usuarios seleccionados
+    const deleteSelectedUsers = useCallback(() => {
+        if (selectedUsers.size === 0) return;
+
+        const selectedCount = selectedUsers.size;
+        const selectedNames = user
+            .filter(u => selectedUsers.has(u.id))
+            .map(u => u.name)
+            .join(', ');
+
+        Swal.fire({
+            title: '¿Estás seguro?',
+            html: `¿Quieres eliminar ${selectedCount} ${selectedCount === 1 ? 'usuario' : 'usuarios'}?<br><small>${selectedNames}</small>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: `Sí, eliminar ${selectedCount} ${selectedCount === 1 ? 'usuario' : 'usuarios'}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const listUser = user.filter((u: UserModel) => !selectedUsers.has(u.id));
+                localStorage.setItem('users', JSON.stringify(listUser));
+                setUser(listUser);
+                setSelectedUsers(new Set());
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Eliminados!',
+                    text: `${selectedCount} ${selectedCount === 1 ? 'usuario ha sido' : 'usuarios han sido'} eliminados.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        });
+    }, [selectedUsers, user]);
 
 
     const handleLogout = () => {
@@ -235,72 +299,111 @@ export const Users = () => {
                             </button>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto scrollbar-thin -mx-4 px-4">
-                            <table className="w-full border-collapse bg-white rounded-xl overflow-hidden shadow-md">
-                                <thead className="bg-gradient-to-r from-green-600 to-green-500">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-white font-semibold uppercase text-base tracking-wider">
-                                            Nombre
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-white font-semibold uppercase text-base tracking-wider">
-                                            Email
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-white font-semibold uppercase text-base tracking-wider">
-                                            Género
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-white font-semibold uppercase text-base tracking-wider">
-                                            Estado
-                                        </th>
-                                        <th className="px-6 py-3 text-center text-white font-semibold uppercase text-base tracking-wider">
-                                            Acciones
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {user.map((userItem) => (
-                                        <tr
-                                            key={userItem.id}
-                                            className="table-row border-b border-gray-200 hover:bg-gray-50 transition-colors"
-                                        >
-                                            <td className="px-6 py-3 text-gray-800 font-medium text-base">
-                                                {userItem.name}
-                                            </td>
-                                            <td className="px-6 py-3 text-gray-600 text-base">
-                                                {userItem.email}
-                                            </td>
-                                            <td className="px-6 py-3">
-                                                <span className="inline-block px-5 py-2.5 rounded-full text-base font-medium bg-blue-100 text-blue-800 capitalize">
-                                                    {userItem.gender}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-3">
-                                                <span className={`inline-block px-5 py-2.5 rounded-full text-base font-medium border capitalize ${getStatusBadgeClass(userItem.status)}`}>
-                                                    {userItem.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-3">
-                                                <div className="flex justify-center items-center gap-5">
-                                                    <button
-                                                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
-                                                        onClick={() => editUserItem(userItem.id)}
-                                                        title="Editar usuario"
-                                                    >
-                                                        <FontAwesomeIcon icon={faPenToSquare} className="text-xl" />
-                                                    </button>
-                                                    <button
-                                                        className="text-red-600 hover:text-red-800 hover:bg-red-50 p-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
-                                                        onClick={() => deleteItem(userItem.id, userItem)}
-                                                        title="Eliminar usuario"
-                                                    >
-                                                        <FontAwesomeIcon icon={faTrashCan} className="text-xl" />
-                                                    </button>
-                                                </div>
-                                            </td>
+                        <>
+                            {selectedUsers.size > 0 && (
+                                <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-red-700 font-semibold text-lg">
+                                            {selectedUsers.size} {selectedUsers.size === 1 ? 'usuario seleccionado' : 'usuarios seleccionados'}
+                                        </span>
+                                    </div>
+                                    <button
+                                        className="bg-red-600 hover:bg-red-700 text-white rounded-xl px-6 py-3 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                                        onClick={deleteSelectedUsers}
+                                    >
+                                        <FontAwesomeIcon icon={faTrash} />
+                                        Eliminar Seleccionados
+                                    </button>
+                                </div>
+                            )}
+                            <div className="overflow-x-auto scrollbar-thin -mx-4 px-4">
+                                <table className="w-full border-collapse bg-white rounded-xl overflow-hidden shadow-md">
+                                    <thead className="bg-gradient-to-r from-green-600 to-green-500">
+                                        <tr>
+                                            <th className="px-6 py-3 text-center text-white font-semibold uppercase text-base tracking-wider w-12">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isAllSelected}
+                                                    ref={(input) => {
+                                                        if (input) input.indeterminate = isIndeterminate;
+                                                    }}
+                                                    onChange={(e) => handleSelectAll(e.target.checked)}
+                                                    className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                                                />
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-white font-semibold uppercase text-base tracking-wider">
+                                                Nombre
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-white font-semibold uppercase text-base tracking-wider">
+                                                Email
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-white font-semibold uppercase text-base tracking-wider">
+                                                Género
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-white font-semibold uppercase text-base tracking-wider">
+                                                Estado
+                                            </th>
+                                            <th className="px-6 py-3 text-center text-white font-semibold uppercase text-base tracking-wider">
+                                                Acciones
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {user.map((userItem) => (
+                                            <tr
+                                                key={userItem.id}
+                                                className={`table-row border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                                                    selectedUsers.has(userItem.id) ? 'bg-blue-50' : ''
+                                                }`}
+                                            >
+                                                <td className="px-6 py-3 text-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedUsers.has(userItem.id)}
+                                                        onChange={(e) => handleSelectUser(userItem.id, e.target.checked)}
+                                                        className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-3 text-gray-800 font-medium text-base">
+                                                    {userItem.name}
+                                                </td>
+                                                <td className="px-6 py-3 text-gray-600 text-base">
+                                                    {userItem.email}
+                                                </td>
+                                                <td className="px-6 py-3">
+                                                    <span className="inline-block px-5 py-2.5 rounded-full text-base font-medium bg-blue-100 text-blue-800 capitalize">
+                                                        {userItem.gender}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-3">
+                                                    <span className={`inline-block px-5 py-2.5 rounded-full text-base font-medium border capitalize ${getStatusBadgeClass(userItem.status)}`}>
+                                                        {userItem.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-3">
+                                                    <div className="flex justify-center items-center gap-5">
+                                                        <button
+                                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                                                            onClick={() => editUserItem(userItem.id)}
+                                                            title="Editar usuario"
+                                                        >
+                                                            <FontAwesomeIcon icon={faPenToSquare} className="text-xl" />
+                                                        </button>
+                                                        <button
+                                                            className="text-red-600 hover:text-red-800 hover:bg-red-50 p-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                                                            onClick={() => deleteItem(userItem.id, userItem)}
+                                                            title="Eliminar usuario"
+                                                        >
+                                                            <FontAwesomeIcon icon={faTrashCan} className="text-xl" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
                     )}
                 </div>
             </div>
