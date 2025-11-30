@@ -1,10 +1,16 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { Users } from './components/users.tsx'
+import { ThemeProvider } from './context/ThemeProvider'
+import { UsersProvider } from './context/UsersContext.tsx'
+import { ListUsers } from './components/ListUsers.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Users />
+    <ThemeProvider>
+      <UsersProvider>
+        <ListUsers />
+      </UsersProvider>
+    </ThemeProvider>
   </StrictMode>,
 )

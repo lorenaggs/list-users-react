@@ -1,6 +1,5 @@
-import type {UserModel} from "../models/usersModels";
-
-const API_URL = 'https://gorest.co.in/public/v2/users';
+import type { UserModel } from "../models/usersModels";
+import { API_URL } from "../constants";
 
 export const getUser = async (): Promise<UserModel[]> => {
     try {

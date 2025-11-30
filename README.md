@@ -1,73 +1,113 @@
 # React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Un entorno moderno, rápido y eficiente para construir aplicaciones web escalables utilizando React, TypeScript y Vite
+como bundler principal.
 
-Currently, two official plugins are available:
+# Características principales
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Vite como servidor de desarrollo ultrarrápido
+
+## React 19 con soporte para el nuevo React Compiler
+
+## TypeScript para tipado seguro
+
+## TailwindCSS para estilos basados en utilidades
+
+## ESLint y reglas específicas para un código más limpio
+
+# React Compiler
+
+Este proyecto está preparado para aprovechar el nuevo compilador de React, el cual ofrece:
+
+## Mejor detección de dependencias en funciones
+
+## Optimización automática sin necesidad de useMemo o useCallback
+
+## Mejor rendimiento en renderizados
+
+## Código más limpio y menos dependiente de optimizaciones manuales
+
+# Instalación y ejecución
+
+## Instalar dependencias
+
+npm install
+
+## Ejecutar en modo desarrollo
+
+npm run dev
+
+# Tecnologías utilizadas
+
+## React 19
+
+## TypeScript
+
+## Vite
+
+## TailwindCSS
 
 ## React Compiler
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ESLint
 
-## Expanding the ESLint configuration
+## FontAwesome
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Formik + Yup
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## SweetAlert
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# FUNCIONALIDADES
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Utiliza React para implementar la interfaz de usuario y las funcionalidades requeridas.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 1. Emplea el siguiente API para obtener los datos de los usuarios:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+https://gorest.co.in/public/v2/users
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 2. Los datos de los usuarios deben ser presentados de manera organizada en una tabla.
+![img-1.png](src/assets/readme/img-1.png)
+
+## 3. Utiliza un estado global para almacenar la información de los usuarios y asegurar su disponibilidad a lo largo de la aplicación.
+
+## 4. Implementa las siguientes operaciones CRUD (Crear, Leer, Actualizar, Eliminar) para los usuarios:
+### CREAR USUARIO
+![crear.png](src/assets/readme/crear.png)
+### ACTUALIZAR USUARIO
+![actualizar.png](src/assets/readme/editar.png)
+### ELIMINAR USUARIO
+![eliminar.png](src/assets/readme/eliminar.png)
+
+
+## 5. 6. Leer: Mostrar los usuarios en la tabla al cargar la página.
+
+      Crear un formulario reutilizable que permita la creación y actualización de la información
+      de los usuarios y se refleje en la tabla.
+
+## 7. 8. 9. Los campos deben contener validaciones de acuerdo al tipo de dato y no estar vacios
+
+         Eliminar: Borrar un usuario y actualizar la tabla en consecuencia.
+         No es necesario llamar al API para las acciones de crear, actualizar, eliminar, se lo debe hacer
+         solo a la información del estado global
+
+## 10. La información de los usuarios debe persistir incluso al recargar la página.
+
+![guardar-local-storage.png](src/assets/readme/guardar-local-storage.png)
+
+## 11. Agrega un botón especial que permita eliminar todos los usuarios almacenados en el estado
+    global y obtener
+![select-all.png](src/assets/readme/select-all.png)
+
+![confirm-delete.png](src/assets/readme/confirm-delete.png)
+
+## Adicionales
+
+## Filtros por nombre o email, todos los generos y todos los estados.
+![filtros.png](src/assets/readme/filters.png)
+
+## Paginación de resultados.
+![paginacion.png](src/assets/readme/paginacion.png)
+
+## Ordenar por nombre o email.
+![ordenar.png](src/assets/readme/ordenar.png)
+

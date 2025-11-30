@@ -1,9 +1,10 @@
 /* Global App Styles */
 #root {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--bg-primary);
   padding: 0;
   margin: 0;
+  transition: background 0.3s ease;
 }
 
 .logo {
@@ -23,17 +24,19 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--scrollbar-track);
   border-radius: 10px;
+  transition: background 0.3s ease;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
+  transition: background 0.3s ease;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Table Styles */
@@ -48,7 +51,8 @@
 }
 
 .table-row:hover {
-  background-color: #f8f9fa;
+  background-color: var(--table-hover);
+  transition: background-color 0.2s ease;
 }
 
 /* Animations */
@@ -67,6 +71,10 @@
   animation: fadeIn 0.3s ease-in-out;
 }
 
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -80,20 +88,5 @@
 
 .slide-in {
   animation: slideIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-in-out;
 }
 

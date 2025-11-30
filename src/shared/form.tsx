@@ -1,8 +1,8 @@
 import { Field, Form, Formik } from "formik";
 import type { UserFormModel } from "../models/userForm";
-import * as Yup from 'yup';
 import type { ItemForm } from "../models/itemForm.ts";
 import type { UserModel } from "../models/usersModels";
+import { createValidationSchema } from "../utils/validationSchemas";
 
 interface FormProps {
     initialValues: UserFormModel;
@@ -13,48 +13,6 @@ interface FormProps {
     isEditMode?: boolean;
     currentUserEmail?: string;
 }
-
-const createValidationSchema = (existingUsers: UserModel[] = [], isEditMode: boolean = false, currentUserEmail: string = '') => {
-    return Yup.object({
-        name: Yup.string()
-            .required('El nombre es requerido')
-            .min(2, 'El nombre debe tener al menos 2 caracteres')
-            .max(50, 'El nombre no puede tener más de 50 caracteres')
-            .matches(
-                /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/,
-                'El nombre solo puede contener letras y espacios'
-            )
-            .trim()
-            .test('no-only-spaces', 'El nombre no puede contener solo espacios', (value) => {
-                return value ? value.trim().length > 0 : false;
-            }),
-        email: Yup.string()
-            .required('El email es requerido')
-            .email('El email no es válido')
-            .max(100, 'El email no puede tener más de 100 caracteres')
-            .matches(
-                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                'El formato del email no es válido'
-            )
-            .test('unique-email', 'Este email ya está registrado', (value) => {
-                if (!value) return true;
-                if (isEditMode && value.toLowerCase() === currentUserEmail.toLowerCase()) {
-                    return true;
-                }
-                return !existingUsers.some(
-                    user => user.email.toLowerCase() === value.toLowerCase()
-                );
-            })
-            .trim()
-            .lowercase(),
-        gender: Yup.string()
-            .required('El género es requerido')
-            .oneOf(['hombre', 'mujer'], 'Debe seleccionar un género válido'),
-        status: Yup.string()
-            .required('El estatus es requerido')
-            .oneOf(['activo', 'inactivo'], 'Debe seleccionar un estatus válido'),
-    });
-};
 
 export const CustomForm = ({ 
     initialValues, 
@@ -79,7 +37,7 @@ export const CustomForm = ({
         >
             {({ isValid, dirty, isSubmitting, errors, values, touched, setFieldTouched }) => (
                 <Form className="flex flex-col gap-8">
-                    <h2 className="text-2xl lg:text-3xl font-bold text-center text-gray-800 mb-4 uppercase">
+                    <h2 className="text-2xl lg:text-3xl font-bold text-center mb-4 uppercase" style={{ color: 'var(--text-primary)' }}>
                         {isEditMode ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
                     </h2>
 
@@ -101,12 +59,11 @@ export const CustomForm = ({
                                 <div key={field.name} className="flex flex-col gap-2">
                                     <label 
                                         htmlFor={field.name}
-                                        className={`text-base font-semibold uppercase tracking-wide ${
-                                            showError ? 'text-red-600' : 'text-gray-700'
-                                        }`}
+                                        className="text-base font-semibold uppercase tracking-wide"
+                                        style={{ color: showError ? 'var(--badge-red-text)' : 'var(--text-secondary)' }}
                                     >
                                         {field.label}
-                                        <span className="text-red-500 ml-1">*</span>
+                                        <span className="ml-1" style={{ color: 'var(--badge-red-text)' }}>*</span>
                                     </label>
 
                                     {field.typeInput === "text" && (
@@ -120,9 +77,14 @@ export const CustomForm = ({
                                             }}
                                             className={`border-2 rounded-xl px-5 py-4 text-base w-full focus:outline-none focus:ring-2 transition-all ${
                                                 showError
-                                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                                    : 'border-gray-300 focus:ring-green-500 focus:border-transparent'
+                                                    ? 'border-red-500 dark:border-red-400 focus:ring-red-500 focus:border-red-500'
+                                                    : 'focus:ring-green-500 focus:border-transparent'
                                             }`}
+                                            style={{
+                                              borderColor: showError ? undefined : 'var(--border-color)',
+                                              backgroundColor: 'var(--bg-input)',
+                                              color: 'var(--text-primary)'
+                                            }}
                                         />
                                     )}
 
@@ -134,11 +96,16 @@ export const CustomForm = ({
                                             onBlur={() => {
                                                 setFieldTouched(field.name, true);
                                             }}
-                                            className={`border-2 rounded-xl px-5 py-4 text-base w-full focus:outline-none focus:ring-2 transition-all bg-white ${
+                                            className={`border-2 rounded-xl px-5 py-4 text-base w-full focus:outline-none focus:ring-2 transition-all ${
                                                 showError
-                                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                                    : 'border-gray-300 focus:ring-green-500 focus:border-transparent'
+                                                    ? 'border-red-500 dark:border-red-400 focus:ring-red-500 focus:border-red-500'
+                                                    : 'focus:ring-green-500 focus:border-transparent'
                                             }`}
+                                            style={{
+                                              borderColor: showError ? undefined : 'var(--border-color)',
+                                              backgroundColor: 'var(--bg-input)',
+                                              color: 'var(--text-primary)'
+                                            }}
                                         >
                                             <option value="">{field.placeholder}</option>
                                             {(field.genders ?? []).map((option) => (
@@ -155,8 +122,8 @@ export const CustomForm = ({
                                     )}
 
                                     {showError && (
-                                        <div className="text-red-500 text-sm mt-1 flex items-center gap-1 animate-fadeIn">
-                                            <span className="text-red-500">⚠</span>
+                                        <div className="text-sm mt-1 flex items-center gap-1 animate-fadeIn" style={{ color: 'var(--badge-red-text)' }}>
+                                            <span>⚠</span>
                                             <span>{fieldError}</span>
                                         </div>
                                     )}
@@ -169,11 +136,23 @@ export const CustomForm = ({
                         <button
                             type="submit"
                             disabled={!isValid || !dirty || isSubmitting}
-                            className={`flex-1 py-5 px-8 rounded-xl text-lg font-semibold transition-all duration-200 ${
-                                !isValid || !dirty || isSubmitting
-                                    ? "bg-gray-400 text-white cursor-not-allowed opacity-60"
-                                    : "bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                            }`}
+                            className="flex-1 py-5 px-8 rounded-xl text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                            style={{
+                              backgroundColor: (!isValid || !dirty || isSubmitting) ? 'var(--text-tertiary)' : 'var(--button-primary)',
+                              color: 'white',
+                              cursor: (!isValid || !dirty || isSubmitting) ? 'not-allowed' : 'pointer',
+                              opacity: (!isValid || !dirty || isSubmitting) ? 0.6 : 1
+                            }}
+                            onMouseEnter={(e) => {
+                              if (isValid && dirty && !isSubmitting) {
+                                e.currentTarget.style.backgroundColor = 'var(--button-primary-hover)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (isValid && dirty && !isSubmitting) {
+                                e.currentTarget.style.backgroundColor = 'var(--button-primary)';
+                              }
+                            }}
                         >
                             {isSubmitting ? 'Guardando...' : 'Guardar'}
                         </button>
@@ -181,7 +160,13 @@ export const CustomForm = ({
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="flex-1 py-5 px-8 rounded-xl text-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all duration-200 shadow-lg hover:shadow-xl"
+                            className="flex-1 py-5 px-8 rounded-xl text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+                            style={{
+                              backgroundColor: 'var(--button-secondary)',
+                              color: 'var(--button-secondary-text)',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--button-secondary-hover)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--button-secondary)'}
                         >
                             Cancelar
                         </button>
