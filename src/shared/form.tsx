@@ -1,4 +1,4 @@
-import { ErrorMessage, Field, Form, Formik } from "formik";
+import { Field, Form, Formik } from "formik";
 import type { UserFormModel } from "../models/userForm";
 import * as Yup from 'yup';
 import type { ItemForm } from "../models/itemForm.ts";
@@ -39,7 +39,7 @@ const createValidationSchema = (existingUsers: UserModel[] = [], isEditMode: boo
             .test('unique-email', 'Este email ya está registrado', (value) => {
                 if (!value) return true;
                 if (isEditMode && value.toLowerCase() === currentUserEmail.toLowerCase()) {
-                    return true; // Permite el mismo email al editar
+                    return true;
                 }
                 return !existingUsers.some(
                     user => user.email.toLowerCase() === value.toLowerCase()
@@ -90,8 +90,6 @@ export const CustomForm = ({
                             const fieldValue = values[fieldName];
                             const isTouched = touched[fieldName];
                             
-                            // Mostrar error mientras escribe: si hay error y el campo tiene valor (no esperar a que sea tocado)
-                            // Para campos select, mostrar error solo si ha sido tocado
                             const hasValue = fieldValue !== '' && fieldValue !== null && fieldValue !== undefined;
                             const showError = fieldError && (
                                 field.typeInput === 'select' 
@@ -117,7 +115,7 @@ export const CustomForm = ({
                                             name={field.name}
                                             type={field.name === 'email' ? 'email' : 'text'}
                                             placeholder={field.placeholder}
-                                            onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                                            onBlur={() => {
                                                 setFieldTouched(field.name, true);
                                             }}
                                             className={`border-2 rounded-xl px-5 py-4 text-base w-full focus:outline-none focus:ring-2 transition-all ${
@@ -133,7 +131,7 @@ export const CustomForm = ({
                                             as="select"
                                             id={field.name}
                                             name={field.name}
-                                            onBlur={(e: React.FocusEvent<HTMLSelectElement>) => {
+                                            onBlur={() => {
                                                 setFieldTouched(field.name, true);
                                             }}
                                             className={`border-2 rounded-xl px-5 py-4 text-base w-full focus:outline-none focus:ring-2 transition-all bg-white ${
